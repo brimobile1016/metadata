@@ -1,0 +1,14 @@
+{
+  "name": "metadata",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "photo-metadata-editor.js",
+  "scripts": {
+    "build": "mkdir -p public && cp photo-metadata-editor.html public/index.html && cp photo-metadata-editor.js public/",
+    "dev": "npx http-server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
