@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Music Metadata Editor untuk menambahkan metadata ID3 ke file MP3."
+    />
+    <title>Music Metadata Editor</title>
+    <style>
+      :root {
+        --ink: #17212b;
+        --muted: #68737d;
+        --line: #dfe5e9;
+        --paper: #fffdf8;
+        --surface: #f4f0e8;
+        --accent: #d85c3b;
+        --accent-dark: #b94327;
+        --teal: #147d78;
+        --teal-dark: #0d625e;
+        --shadow: 0 20px 55px rgba(31, 42, 48, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 32px 18px;
+        color: var(--ink);
+        background:
+          radial-gradient(
+            circle at 8% 8%,
+            rgba(216, 92, 59, 0.12),
+            transparent 28%
+          ),
+          linear-gradient(135deg, #f7f3eb 0%, #e8efed 100%);
+        font-family: Georgia, "Times New Roman", serif;
+      }
+
+      .shell {
+        width: min(980px, 100%);
+        margin: 0 auto;
+        overflow: hidden;
+        background: var(--paper);
+        border: 1px solid rgba(23, 33, 43, 0.08);
+        box-shadow: var(--shadow);
+      }
+
+      .app-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 16px clamp(24px, 5vw, 52px);
+        color: #dbe5e3;
+        background: #111a22;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        font: 12px Arial, sans-serif;
+      }
+
+      .app-brand {
+        color: #fffaf4;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .app-links {
+        display: flex;
+        gap: 6px;
+      }
+
+      .app-link {
+        padding: 8px 12px;
+        color: #9eacab;
+        text-decoration: none;
+        border: 1px solid transparent;
+        transition: color 0.2s, border-color 0.2s, background 0.2s;
+      }
+
+      .app-link:hover,
+      .app-link.active {
+        color: #fffaf4;
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 28px;
+        align-items: end;
+        padding: clamp(28px, 6vw, 58px);
+        color: #fffaf4;
+        background: var(--ink);
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: #f3a58f;
+        font:
+          700 12px/1.2 Arial,
+          sans-serif;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 570px;
+        font-size: clamp(38px, 7vw, 72px);
+        line-height: 0.98;
+        letter-spacing: -0.04em;
+      }
+      .intro {
+        max-width: 520px;
+        margin: 18px 0 0;
+        color: #c9d2d2;
+        font:
+          15px/1.65 Arial,
+          sans-serif;
+      }
+
+      .record-mark {
+        display: grid;
+        place-items: center;
+        width: 108px;
+        aspect-ratio: 1;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          var(--accent) 0 10%,
+          #f4c0a6 11% 14%,
+          #263944 15% 18%,
+          #17212b 19% 100%
+        );
+        box-shadow:
+          0 0 0 14px rgba(255, 255, 255, 0.03),
+          0 0 0 28px rgba(255, 255, 255, 0.025);
+      }
+
+      main {
+        padding: clamp(24px, 5vw, 52px);
+      }
+      .section {
+        padding-bottom: 30px;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--line);
+      }
+      .section-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+      h2 {
+        margin: 0;
+        font-size: 23px;
+        letter-spacing: -0.02em;
+      }
+      .hint {
+        margin: 0;
+        color: var(--muted);
+        font:
+          12px Arial,
+          sans-serif;
+      }
+
+      .dropzone {
+        display: grid;
+        place-items: center;
+        min-height: 150px;
+        padding: 24px;
+        border: 1px dashed #b9c6c7;
+        background: #f8faf8;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s,
+          transform 0.2s;
+      }
+      .dropzone:hover,
+      .dropzone.dragover {
+        border-color: var(--teal);
+        background: #edf7f4;
+        transform: translateY(-2px);
+      }
+      .dropzone strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 20px;
+      }
+      .dropzone span {
+        color: var(--muted);
+        font:
+          13px/1.5 Arial,
+          sans-serif;
+      }
+      #audioInput {
+        display: none;
+      }
+
+      .file-card {
+        display: none;
+        grid-template-columns: auto 1fr auto;
+        gap: 15px;
+        align-items: center;
+        margin-top: 14px;
+        padding: 15px;
+        background: var(--surface);
+        font:
+          13px Arial,
+          sans-serif;
+      }
+      .file-card.visible {
+        display: grid;
+      }
+      .file-icon {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        color: white;
+        background: var(--accent);
+        font-size: 20px;
+      }
+      .file-name {
+        overflow: hidden;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .file-size {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .file-clear {
+        border: 0;
+        color: var(--accent-dark);
+        background: transparent;
+        font:
+          700 12px Arial,
+          sans-serif;
+        cursor: pointer;
+      }
+
+      .metadata-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px 20px;
+      }
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+      .field.wide {
+        grid-column: 1 / -1;
+      }
+      label {
+        color: #3b474d;
+        font:
+          700 12px Arial,
+          sans-serif;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 0;
+        padding: 13px 14px;
+        color: var(--ink);
+        background: #fff;
+        font:
+          15px Georgia,
+          serif;
+        outline: none;
+      }
+      textarea {
+        min-height: 92px;
+        resize: vertical;
+      }
+      input:focus,
+      textarea:focus,
+      select:focus {
+        border-color: var(--teal);
+        box-shadow: 0 0 0 3px rgba(20, 125, 120, 0.12);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+      button {
+        min-height: 45px;
+        border: 0;
+        padding: 12px 20px;
+        font:
+          700 13px Arial,
+          sans-serif;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.2s,
+          opacity 0.2s;
+      }
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      #submitMetadata {
+        color: #fff;
+        background: var(--teal);
+      }
+      #submitMetadata:hover:not(:disabled) {
+        background: var(--teal-dark);
+      }
+      #downloadMusic {
+        color: #fff;
+        background: var(--accent);
+      }
+      #downloadMusic:hover:not(:disabled) {
+        background: var(--accent-dark);
+      }
+      #status {
+        flex: 1 1 100%;
+        min-height: 20px;
+        margin-top: 5px;
+        color: var(--muted);
+        font:
+          13px/1.5 Arial,
+          sans-serif;
+      }
+      #status.success {
+        color: #176b54;
+      }
+      #status.error {
+        color: #a33725;
+      }
+
+      .note {
+        margin: 0;
+        color: var(--muted);
+        font:
+          13px/1.7 Arial,
+          sans-serif;
+      }
+      .note strong {
+        color: var(--ink);
+      }
+      footer {
+        padding: 18px clamp(24px, 5vw, 52px);
+        color: var(--muted);
+        background: var(--surface);
+        font:
+          11px Arial,
+          sans-serif;
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 0;
+        }
+        .app-nav {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 12px;
+        }
+        header {
+          grid-template-columns: 1fr;
+        }
+        .record-mark {
+          width: 78px;
+        }
+        .metadata-grid {
+          grid-template-columns: 1fr;
+        }
+        .field.wide {
+          grid-column: auto;
+        }
+        .file-card {
+          grid-template-columns: auto 1fr;
+        }
+        .file-clear {
+          grid-column: 2;
+          justify-self: start;
+          padding: 0;
+        }
+        .actions button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <nav class="app-nav" aria-label="Metadata tools">
+        <span class="app-brand">Metadata Studio</span>
+        <div class="app-links">
+          <a class="app-link" href="index.html">Photo</a>
+          <a class="app-link active" href="music-metadata-editor.html" aria-current="page">Music</a>
+        </div>
+      </nav>
+      <header>
+        <div>
+          <p class="eyebrow">Audio archive / ID3 editor</p>
+          <h1>Give your music a proper label.</h1>
+          <p class="intro">
+            Tambahkan identitas lagu ke file MP3 langsung dari browser. File
+            asli tetap aman dan hasilnya diunduh sebagai salinan baru.
+          </p>
+        </div>
+        <div class="record-mark" aria-hidden="true"></div>
+      </header>
+
+      <main>
+        <section class="section">
+          <div class="section-heading">
+            <h2>01. Pilih audio</h2>
+            <p class="hint">Format yang didukung: MP3</p>
+          </div>
+          <label class="dropzone" for="audioInput" id="dropzone">
+            <span
+              ><strong>Letakkan file MP3 di sini</strong>atau klik untuk memilih
+              dari perangkat</span
+            >
+          </label>
+          <input id="audioInput" type="file" accept="audio/mpeg,.mp3" />
+          <div class="file-card" id="fileCard">
+            <div class="file-icon" aria-hidden="true">♫</div>
+            <div>
+              <div class="file-name" id="fileName"></div>
+              <div class="file-size" id="fileSize"></div>
+            </div>
+            <button type="button" class="file-clear" id="clearFile">
+              Ganti file
+            </button>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-heading">
+            <h2>02. Isi metadata</h2>
+            <p class="hint">Semua kolom boleh dikosongkan</p>
+          </div>
+          <div class="metadata-grid">
+            <div class="field wide">
+              <label for="title">Judul lagu</label
+              ><input
+                id="title"
+                type="text"
+                placeholder="Contoh: Senja di Stasiun"
+              />
+            </div>
+            <div class="field">
+              <label for="artist">Artis</label
+              ><input id="artist" type="text" placeholder="Nama artis" />
+            </div>
+            <div class="field">
+              <label for="album">Album</label
+              ><input id="album" type="text" placeholder="Nama album" />
+            </div>
+            <div class="field">
+              <label for="albumArtist">Artis album</label
+              ><input
+                id="albumArtist"
+                type="text"
+                placeholder="Artis utama album"
+              />
+            </div>
+            <div class="field">
+              <label for="year">Tahun</label
+              ><input
+                id="year"
+                type="text"
+                inputmode="numeric"
+                maxlength="4"
+                placeholder="2026"
+              />
+            </div>
+            <div class="field">
+              <label for="genre">Genre</label
+              ><input id="genre" type="text" placeholder="Pop, Jazz, Rock..." />
+            </div>
+            <div class="field">
+              <label for="track">Nomor trek</label
+              ><input
+                id="track"
+                type="text"
+                inputmode="numeric"
+                placeholder="1"
+              />
+            </div>
+            <div class="field">
+              <label for="disc">Nomor disk</label
+              ><input
+                id="disc"
+                type="text"
+                inputmode="numeric"
+                placeholder="1"
+              />
+            </div>
+            <div class="field wide">
+              <label for="comment">Komentar</label
+              ><textarea
+                id="comment"
+                placeholder="Catatan tambahan untuk file audio ini"
+              ></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="actions">
+            <button type="button" id="submitMetadata" disabled>
+              Simpan metadata
+            </button>
+            <button type="button" id="downloadMusic" hidden disabled>
+              Unduh MP3 baru
+            </button>
+            <div id="status" role="status" aria-live="polite"></div>
+          </div>
+          <p class="note">
+            <strong>Catatan teknis:</strong> editor ini menulis tag ID3v2 ke MP3
+            di perangkat Anda. Tidak ada file yang dikirim ke server. Untuk WAV,
+            FLAC, atau format lain, gunakan editor dengan dukungan tag yang
+            sesuai.
+          </p>
+        </section>
+      </main>
+      <footer>Music Metadata Editor · bekerja lokal di browser</footer>
+    </div>
+
+    <script type="module">
+      import { ID3Writer } from "https://unpkg.com/browser-id3-writer@6.1.0/dist/browser-id3-writer.mjs";
+
+      (() => {
+        "use strict";
+
+        const audioInput = document.getElementById("audioInput");
+        const dropzone = document.getElementById("dropzone");
+        const fileCard = document.getElementById("fileCard");
+        const fileName = document.getElementById("fileName");
+        const fileSize = document.getElementById("fileSize");
+        const clearFile = document.getElementById("clearFile");
+        const submitButton = document.getElementById("submitMetadata");
+        const downloadButton = document.getElementById("downloadMusic");
+        const status = document.getElementById("status");
+        let selectedFile = null;
+        let outputBlob = null;
+
+        const fields = {
+          title: "TIT2",
+          artist: "TPE1",
+          album: "TALB",
+          albumArtist: "TPE2",
+          year: "TYER",
+          genre: "TCON",
+          track: "TRCK",
+          disc: "TPOS",
+          comment: "COMM",
+        };
+
+        function setStatus(message, type = "") {
+          status.textContent = message;
+          status.className = type;
+        }
+
+        function formatSize(bytes) {
+          return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+        }
+
+        function addFiveStarRating(arrayBuffer) {
+          const source = new Uint8Array(arrayBuffer);
+          const hasId3Header =
+            source.length >= 10 &&
+            source[0] === 0x49 &&
+            source[1] === 0x44 &&
+            source[2] === 0x33;
+          if (!hasId3Header) return arrayBuffer;
+
+          const currentTagSize =
+            (source[6] << 21) |
+            (source[7] << 14) |
+            (source[8] << 7) |
+            source[9];
+          const owners = [
+            "rating@musicbrainz.org",
+            "Windows Media Player 9 Series",
+          ];
+          const frames = owners.map((owner) => {
+            const email = new TextEncoder().encode(owner);
+            const frameContent = new Uint8Array(email.length + 1 + 1 + 4);
+            frameContent.set(email);
+            frameContent[email.length] = 0;
+            frameContent[email.length + 1] = 255;
+            const frame = new Uint8Array(10 + frameContent.length);
+            frame.set([80, 79, 80, 77]);
+            frame.set(
+              [
+                (frameContent.length >>> 24) & 255,
+                (frameContent.length >>> 16) & 255,
+                (frameContent.length >>> 8) & 255,
+                frameContent.length & 255,
+                0,
+                0,
+              ],
+              4,
+            );
+            frame.set(frameContent, 10);
+            return frame;
+          });
+
+          const ratingSize = frames.reduce((total, frame) => total + frame.length, 0);
+          const updatedTagSize = currentTagSize + ratingSize;
+          const result = new Uint8Array(source.length + ratingSize);
+          result.set(source.subarray(0, 10), 0);
+          result.set(
+            [
+              (updatedTagSize >>> 21) & 127,
+              (updatedTagSize >>> 14) & 127,
+              (updatedTagSize >>> 7) & 127,
+              updatedTagSize & 127,
+            ],
+            6,
+          );
+          let offset = 10;
+          frames.forEach((frame) => {
+            result.set(frame, offset);
+            offset += frame.length;
+          });
+          result.set(source.subarray(10), offset);
+          return result.buffer;
+        }
+
+        function chooseFile(file) {
+          if (!file) return;
+          if (
+            file.type !== "audio/mpeg" &&
+            !file.name.toLowerCase().endsWith(".mp3")
+          ) {
+            setStatus(
+              "Pilih file MP3 agar metadata ID3 dapat ditulis.",
+              "error",
+            );
+            return;
+          }
+          selectedFile = file;
+          outputBlob = null;
+          fileName.textContent = file.name;
+          fileSize.textContent = formatSize(file.size);
+          fileCard.classList.add("visible");
+          submitButton.disabled = false;
+          downloadButton.hidden = true;
+          downloadButton.disabled = true;
+          setStatus("File siap diberi metadata.");
+        }
+
+        audioInput.addEventListener("change", () =>
+          chooseFile(audioInput.files[0]),
+        );
+        clearFile.addEventListener("click", () => {
+          audioInput.value = "";
+          selectedFile = null;
+          outputBlob = null;
+          fileCard.classList.remove("visible");
+          submitButton.disabled = true;
+          downloadButton.hidden = true;
+          setStatus("");
+        });
+
+        ["dragenter", "dragover"].forEach((eventName) =>
+          dropzone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            dropzone.classList.add("dragover");
+          }),
+        );
+        ["dragleave", "drop"].forEach((eventName) =>
+          dropzone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            dropzone.classList.remove("dragover");
+          }),
+        );
+        dropzone.addEventListener("drop", (event) =>
+          chooseFile(event.dataTransfer.files[0]),
+        );
+
+        submitButton.addEventListener("click", async () => {
+          if (!selectedFile) {
+            setStatus(
+              "Library metadata belum tersedia. Periksa koneksi lalu coba lagi.",
+              "error",
+            );
+            return;
+          }
+          submitButton.disabled = true;
+          setStatus("Sedang menulis metadata...");
+          try {
+            const writer = new ID3Writer(await selectedFile.arrayBuffer());
+            Object.entries(fields).forEach(([field, frame]) => {
+              const value = document.getElementById(field).value.trim();
+              if (!value) return;
+              const frameValue =
+                frame === "COMM"
+                  ? [{ description: "", text: value, language: "eng" }]
+                  : ["TPE1", "TCON"].includes(frame)
+                    ? frame === "TCON"
+                      ? value.split(",").map((genre) => genre.trim()).filter(Boolean)
+                      : [value]
+                    : value;
+              writer.setFrame(frame, frameValue);
+            });
+            writer.addTag();
+            outputBlob = new Blob([addFiveStarRating(writer.arrayBuffer)], {
+              type: "audio/mpeg",
+            });
+            downloadButton.hidden = false;
+            downloadButton.disabled = false;
+            setStatus(
+              "Metadata berhasil ditambahkan. File baru siap diunduh.",
+              "success",
+            );
+          } catch (error) {
+            setStatus(`Gagal menulis metadata: ${error.message}`, "error");
+          } finally {
+            submitButton.disabled = false;
+          }
+        });
+
+        downloadButton.addEventListener("click", () => {
+          if (!outputBlob) return;
+          const url = URL.createObjectURL(outputBlob);
+          const link = document.createElement("a");
+          const title = document.getElementById("title").value.trim();
+          const originalName = selectedFile.name.replace(/\.mp3$/i, "");
+          const outputName = (title || `${originalName}-metadata`)
+            .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+            .trim()
+            .replace(/[. ]+$/, "") || "music-metadata";
+          link.href = url;
+          link.download = `${outputName}.mp3`;
+          link.click();
+          URL.revokeObjectURL(url);
+        });
+      })();
+    </script>
+  </body>
+</html>
