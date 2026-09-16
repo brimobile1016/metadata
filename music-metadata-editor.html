@@ -688,6 +688,30 @@
           setStatus("File siap diberi metadata.");
         }
 
+        async function createTaggedBlob() {
+          const writer = new ID3Writer(await selectedFile.arrayBuffer());
+          Object.entries(fields).forEach(([field, frame]) => {
+            const value = document.getElementById(field).value.trim();
+            if (!value) return;
+            const frameValue =
+              frame === "COMM"
+                ? { description: "", text: value, language: "eng" }
+                : ["TPE1", "TCON"].includes(frame)
+                  ? frame === "TCON"
+                    ? value
+                        .split(",")
+                        .map((genre) => genre.trim())
+                        .filter(Boolean)
+                    : [value]
+                  : value;
+            writer.setFrame(frame, frameValue);
+          });
+          writer.addTag();
+          return new Blob([addFiveStarRating(writer.arrayBuffer)], {
+            type: "audio/mpeg",
+          });
+        }
+
         audioInput.addEventListener("change", () =>
           chooseFile(audioInput.files[0]),
         );
@@ -728,27 +752,7 @@
           submitButton.disabled = true;
           setStatus("Sedang menulis metadata...");
           try {
-            const writer = new ID3Writer(await selectedFile.arrayBuffer());
-            Object.entries(fields).forEach(([field, frame]) => {
-              const value = document.getElementById(field).value.trim();
-              if (!value) return;
-              const frameValue =
-                frame === "COMM"
-                  ? [{ description: "", text: value, language: "eng" }]
-                  : ["TPE1", "TCON"].includes(frame)
-                    ? frame === "TCON"
-                      ? value
-                          .split(",")
-                          .map((genre) => genre.trim())
-                          .filter(Boolean)
-                      : [value]
-                    : value;
-              writer.setFrame(frame, frameValue);
-            });
-            writer.addTag();
-            outputBlob = new Blob([addFiveStarRating(writer.arrayBuffer)], {
-              type: "audio/mpeg",
-            });
+            outputBlob = await createTaggedBlob();
             downloadButton.hidden = false;
             downloadButton.disabled = false;
             setStatus(
@@ -762,8 +766,17 @@
           }
         });
 
-        downloadButton.addEventListener("click", () => {
-          if (!outputBlob) return;
+        downloadButton.addEventListener("click", async () => {
+          if (!selectedFile) return;
+          downloadButton.disabled = true;
+          setStatus("Menyiapkan file terbaru...");
+          try {
+            outputBlob = await createTaggedBlob();
+          } catch (error) {
+            setStatus(`Gagal menulis metadata: ${error.message}`, "error");
+            downloadButton.disabled = false;
+            return;
+          }
           const url = URL.createObjectURL(outputBlob);
           const link = document.createElement("a");
           const title = document.getElementById("title").value.trim();
@@ -777,6 +790,8 @@
           link.download = `${outputName}.mp3`;
           link.click();
           URL.revokeObjectURL(url);
+          downloadButton.disabled = false;
+          setStatus("File berhasil diunduh dengan metadata terbaru.", "success");
         });
       })();
     </script>
