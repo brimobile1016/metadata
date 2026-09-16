@@ -7,7 +7,7 @@
   "type": "commonjs",
   "main": "photo-metadata-editor.js",
   "scripts": {
-    "build": "mkdir -p public && cp photo-metadata-editor.html public/index.html && cp photo-metadata-editor.js public/",
+    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('public',{recursive:true}); fs.copyFileSync('photo-metadata-editor.html','public/index.html'); fs.copyFileSync('photo-metadata-editor.js','public/photo-metadata-editor.js'); fs.copyFileSync('music-metadata-editor.html','public/music-metadata-editor.html');\"",
     "dev": "npx http-server",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
