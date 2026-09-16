@@ -51,6 +51,51 @@
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
       }
 
+      .app-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin: -30px -30px 28px;
+        padding: 15px 20px;
+        color: #dbe5e3;
+        background: #17212b;
+        border-radius: 14px 14px 0 0;
+        font:
+          12px Arial,
+          sans-serif;
+      }
+
+      .app-brand {
+        color: #ffffff;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .app-links {
+        display: flex;
+        gap: 6px;
+      }
+
+      .app-link {
+        padding: 8px 12px;
+        color: #aeb9c1;
+        text-decoration: none;
+        border: 1px solid transparent;
+        transition:
+          color 0.2s,
+          border-color 0.2s,
+          background 0.2s;
+      }
+
+      .app-link:hover,
+      .app-link.active {
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+      }
+
       h1 {
         margin: 0 0 8px;
 
@@ -451,6 +496,13 @@
           padding: 20px;
         }
 
+        .app-nav {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 12px;
+          margin: -20px -20px 22px;
+        }
+
         .phone-selection {
           grid-template-columns: 1fr;
         }
@@ -488,6 +540,18 @@
 
   <body>
     <div class="container">
+      <nav class="app-nav" aria-label="Metadata tools">
+        <span class="app-brand">Metadata Studio</span>
+        <div class="app-links">
+          <a
+            class="app-link active"
+            href="photo-metadata-editor.html"
+            aria-current="page"
+            >Photo</a
+          >
+          <a class="app-link" href="music-metadata-editor.html">Music</a>
+        </div>
+      </nav>
       <!-- =========================================================
          HEADER
     ========================================================== -->
